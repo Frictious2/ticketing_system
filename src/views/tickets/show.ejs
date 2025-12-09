@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ticket #<%= ticket.id %> - Ticketing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/public/css/style.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/dashboard">Ticketing</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link" href="/tickets">Tickets</a></li>
+        </ul>
+        <% if (user) { %>
+          <span class="navbar-text me-3"><%= user.name %> (<%= user.role %>)</span>
+          <form action="/auth/logout" method="post" class="d-inline"><button class="btn btn-outline-light btn-sm" type="submit">Logout</button></form>
+        <% } %>
+      </div>
+    </div>
+  </nav>
+  <main class="container py-4">
+    <% if (success && success.length) { %>
+      <div class="alert alert-success"><%= success[0] %></div>
+    <% } %>
+    <% if (error && error.length) { %>
+      <div class="alert alert-danger"><%= error[0] %></div>
+    <% } %>
+    <div class="d-flex justify-content-between align-items-center">
+      <h3>Ticket #<%= ticket.id %> - <%= ticket.title %></h3>
+      <div>
+        <% if (user && user.role === 'admin') { %>
+          <form action="/tickets/<%= ticket.id %>/assign" method="post" class="d-inline">
+            <div class="input-group">
+              <input type="number" name="assignee_id" class="form-control" placeholder="Technician ID" required>
+              <button class="btn btn-outline-primary" type="submit">Assign</button>
+            </div>
+          </form>
+        <% } %>
+        <% if (user && (user.role === 'admin' || user.role === 'technician')) { %>
+          <form action="/tickets/<%= ticket.id %>/resolve" method="post" class="d-inline ms-2">
+            <button class="btn btn-success" type="submit" <%= ticket.status === 'resolved' ? 'disabled' : '' %>>Resolve</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+    <div class="mb-3"><span class="badge bg-info"><%= ticket.priority %></span> <span class="badge <%= ticket.status === 'open' ? 'bg-warning' : 'bg-success' %>"><%= ticket.status %></span> <span class="badge bg-secondary"><%= ticket.issue_type %></span></div>
+    <p><%= ticket.description %></p>
+    <h5 class="mt-4">Attachments</h5>
+    <form action="/tickets/<%= ticket.id %>/attachments" method="post" enctype="multipart/form-data" class="mb-3">
+      <div class="input-group">
+        <input type="file" name="attachment" class="form-control" required>
+        <button class="btn btn-outline-secondary" type="submit">Upload</button>
+      </div>
+    </form>
+    <ul class="list-group mb-4">
+      <% attachments.forEach(a => { %>
+        <li class="list-group-item d-flex justify-content-between"><span><%= a.filename %></span><a class="btn btn-sm btn-outline-primary" href="/<%= a.filepath %>" target="_blank">Download</a></li>
+      <% }) %>
+      <% if (!attachments.length) { %><li class="list-group-item">No attachments</li><% } %>
+    </ul>
+    <h5>Comments</h5>
+    <ul class="list-group mb-3">
+      <% comments.forEach(c => { %>
+        <li class="list-group-item"><strong><%= c.user_name %>:</strong> <%= c.content %></li>
+      <% }) %>
+      <% if (!comments.length) { %><li class="list-group-item">No comments</li><% } %>
+    </ul>
+    <form action="/tickets/<%= ticket.id %>/comments" method="post">
+      <div class="input-group"><input type="text" name="content" class="form-control" placeholder="Add a comment" required><button class="btn btn-outline-primary" type="submit">Add</button></div>
+    </form>
+    <div class="mt-4">
+      <a class="btn btn-secondary" href="/tickets">Back</a>
+
+      <form action="/tickets/<%= ticket.id %>/delete" method="post" class="d-inline ms-2"><button class="btn btn-outline-danger" type="submit">Delete</button></form>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
